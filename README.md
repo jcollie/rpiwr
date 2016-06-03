@@ -41,6 +41,9 @@ B+ should work as well. The Raspberry Pi Zero should work, but you'll
 need to solder a header onto the GPIO pins to connect it to the add-on
 board.
 
+The total cost (assuming you have to buy everything) is going to be
+around US$160 plus whatever shipping costs you incur.
+
 ### From your favorite supplier
 
 If you don't already have a Raspberry Pi you'll need to buy one.  If
