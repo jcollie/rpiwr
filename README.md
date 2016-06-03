@@ -1,7 +1,7 @@
 # Raspberry Pi Weather Radio
 
 This project is about developing a NOAA Weather Radio that connects
-into your smart home, in particular to (openHAB)[http://www.openhab.org/].
+into your smart home, in particular to [openHAB](http://www.openhab.org/).
 
 ## Safety notes and disclaimer
 
@@ -47,21 +47,24 @@ If you don't already have a Raspberry Pi you'll need to buy one.  If
 you are buying a new Raspberry Pi I'd recommend getting the Raspberry
 Pi 3 as it has the best performance and built-in wireless.
 
-Item | Notes | Approximate Cost (US$) (as of 2016/6/1)
+Item | Notes | Approximate Cost (as of 2016/6/1)
 -----| ----- | ----------------------
-Raspberry Pi | | $35
-MicroSD card formatted with your favorite distro | The instructions are going to assume you are using Raspbian Jessie, but just about anything will work | $10
-Power supply | I like the [CanaKit 5V 2.5A Raspberry Pi 3 Power Supply](http://smile.amazon.com/dp/B00MARDJZ4) but anything that can supply 2.0A or more should work. | $10
-Wireless adapter | Only if you're not using a Raspberry Pi 3 or connecting via the Ethernet adapter | $10
+Raspberry Pi | | US$35
+MicroSD card formatted with your favorite distro | The instructions are going to assume you are using Raspbian Jessie, but just about anything will work | US$10
+Power supply | I like the [CanaKit 5V 2.5A Raspberry Pi 3 Power Supply](http://smile.amazon.com/dp/B00MARDJZ4) but anything that can supply 2.0A or more should work. | US$10
+Wireless adapter | Only if you're not using a Raspberry Pi 3 or connecting via the Ethernet adapter | US$10
 
 ### From [AIW Industries](http://www.aiwindistries.com/)
 
-Item | Notes | Approximate Cost (US$) (as of 2016/6/1)
+Item | Notes | Approximate Cost (as of 2016/6/1)
 ---- | ----- | ----------------------
-Raspberry Pi B+/2 NWR Receiver/SAME Decoder | | $69.95
-SMA Wideband Antenna | | $11.00
-Acrylic Case w/Standoff Kit | Optional but highly recommended | $7.50
-Volume Knob | Optional but highly recommended | $5.25
+Raspberry Pi B+/2 NWR Receiver/SAME Decoder | | US$69.95
+SMA Wideband Antenna | An antenna of some kind is required. I'd recommend starting with the antenna from AIW Industries and then if you aren't getting a good enough signal you can upgrade to another antenna. | US$11.00
+Acrylic Case w/Standoff Kit | Optional but highly recommended | US$7.50
+Volume Knob | Optional but highly recommended | US$5.25
+
+Contact AIW Industries about shipping costs, especially if you need to
+ship to someplace outside the United States.
 
 ## openHAB and User Interfaces
 
@@ -108,7 +111,7 @@ If you'd prefer to use a distribution other than Raspbian Jessie
 anyone with sufficient experience should be able to adapt these
 instructions. I have limited or no experience with distribitions for
 the Raspberry Pi other than Raspbian so I probably wouldn't be able to
-help with any problems.
+help with any problems that are specific to a distribution.
 
 I'd also reccommend that you do not run openHAB and the weather radio
 on the same Raspberry Pi. In fact, I do not recommend that you run
