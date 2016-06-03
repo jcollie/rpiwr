@@ -320,7 +320,7 @@ with open('/proc/cpuinfo', 'rb') as cpuinfo:
         sys.exit(1)
     serial = match.group(1).decode('ascii')
 
-with open('/opt/rpiwr/etc/config.json','wb') as c:
+with open('/opt/rpiwr/etc/config.json','rb') as c:
     config = json.loads(c.read().decode('utf-8'))
     
 try:
