@@ -69,5 +69,5 @@ move on to the next step.
 ## Enable I2C
 
 ```shell
-# apt-get install python3-dev python3-smbus
+apt-get install python3-dev python3-smbus
 ```
