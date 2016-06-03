@@ -1,0 +1,9 @@
+[Unit]
+Description=Raspberry Pi Weather Radio
+
+[Service]
+WorkingDirectory=/opt/rpiwr/radio
+ExecStart=/opt/rpiwr/bin/python /opt/rpiwr/radio/rpiwr.py
+
+[Install]
+WantedBy=multi-user.target

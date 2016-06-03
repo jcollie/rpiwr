@@ -1,0 +1,12 @@
+sitemap weather_radio label="Weather Radio"
+{
+  Frame label="Weather Radio (<name>)" icon="house" {
+    Text item=weather_radio_<name>_rssi
+    Text item=weather_radio_<name>_snr
+    Text item=weather_radio_<name>_frequency
+    Text item=weather_radio_<name>_frequency_offset
+    Text item=weather_radio_<name>_channel
+    Switch item=weather_radio_<name>_mute
+    Slider item=weather_radio_<name>_volume minValue=0 maxValue=100
+  }
+}

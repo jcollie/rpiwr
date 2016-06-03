@@ -132,8 +132,15 @@ let's get the latest version in our virtualenv:
 
 Install the rest of the Python modules we'll need. We'll install them
 from source since in most cases we need newer versions than are
-packaged in Raspbian.
+packaged in Raspbian. Note that there are some additional packages
+that need to be installed to make all of the Python modules install
+properly (some of them are C extension modules). (At some point I need
+to start with a fresh install of Raspbian to determine which Raspbian
+packages need to be installed).
 
 ```sh
 /opt/rpiwr/bin/pip install --upgrade --requirement /opt/rpiwr/radio/requirements.txt
 ```
+
+## systemd service
+

@@ -1,0 +1,7 @@
+{
+    "mqtt": {
+	"tls": true,
+	"hostname": "localhost",
+	"port": 8883
+    }
+}

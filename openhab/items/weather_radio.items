@@ -1,0 +1,7 @@
+Number weather_radio_<name>_rssi "RSSI [%d dBm]" {mqtt="<[<broker>:weather_radio/<serial_number>/rssi:state:REGEX((.*))]"}
+Number weather_radio_<name>_snr "SNR [%d dBµV]" {mqtt="<[<broker>:weather_radio/<serial_number>/snr:state:REGEX((.*))]"}
+Number weather_radio_<name>_frequency "Frequency [%d Hz]" {mqtt="<[<broker>:weather_radio/<serial_number>/frequency:state:REGEX((.*))]"}
+Number weather_radio_<name>_frequency_offset "Frequency Offset [%d Hz]" {mqtt="<[<broker>:weather_radio/<serial_number>/frequency_offset:state:REGEX((.*))]"}
+Number weather_radio_<name>_channel "Channel [%04X]" {mqtt="<[<broker>:weather_radio/<serial_number>/channel:state:REGEX((.*))]"}
+Switch weather_radio_<name>_mute "Mute" <contact> {mqtt=">[<broker>:weather_radio/<serial_number>/mute_control:command:*:default],<[<broker>:weather_radio/<serial_number>/mute_status:state:default]"}
+Dimmer weather_radio_<name>_volume "Volume [%d %%]" <slider> {mqtt=">[<broker>:weather_radio/<serial_number>/volume_control:command:*:MAP(weather_radio_volume_out.map)],<[<broker>:weather_radio/<serial_number>/volume_status:state:MAP(weather_radio_volume_in.map)]"}
