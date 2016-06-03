@@ -68,6 +68,72 @@ move on to the next step.
 
 ## Enable I2C
 
+Create the file `/etc/modules-load.d/i2c.conf` with the following content:
+
+```
+i2c-bcm2708
+i2c-dev
+```
+
+Edit `/boot/config.txt` and make sure that the following lines appear
+(uncommented) in the file:
+
+```
+dtparam=i2c1=on
+dtparam=i2c_arm=on
+```
+
+Install some I2C utilities that will be used for some testing:
+
 ``` sh
-apt-get install python3-dev python3-smbus
+apt-get install i2c-tools
+```
+
+Reboot your Raspberry Pi. Once you're logged back running `i2cdetect
+-y 1` should return this:
+
+
+```
+     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+00:          -- -- -- -- -- -- -- -- -- -- -- -- --
+10: -- 11 -- -- -- -- -- -- -- -- -- -- -- -- -- --
+20: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+30: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+40: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+70: -- -- -- -- -- -- -- --
+```
+
+## Python 3 virtualenv
+
+The server I've written uses Python 3, plus a few pre-packaged modules so make sure that they are installed. We'll also need `git` to check out 
+
+```sh
+apt-get install python3-dev python3-smbus python3-virtualenv git
+```
+
+```sh
+git clone https://github.com/jcollie/rpiwr.git /opt/rpiwr
+```
+
+Then turn that into a Python virtualenv:
+
+```sh
+virtualenv --python=python3 /opt/rpiwr
+```
+
+Raspbian comes with an ancient version of `pip` and `setuptools` so
+let's get the latest version in our virtualenv:
+
+```sh
+/opt/rpiwr/bin/pip install --upgrade pip setuptools
+```
+
+Install the rest of the Python modules we'll need. We'll install them
+from source since in most cases we need newer versions than are
+packaged in Raspbian.
+
+```sh
+/opt/rpiwr/bin/pip install --upgrade --requirement /opt/rpiwr/radio/requirements.txt
 ```
