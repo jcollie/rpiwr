@@ -16,9 +16,9 @@ and replace the following placeholders with the correct information:
 
 Placeholder | Notes
 ----------- | -----
-<serial_number> | Serial number of your Raspberry Pi. The serial number is used to distinguish multiple weather radios if you had them. The serial number can be found at the bottom of `/proc/cpuinfo`.
-<name> | Friendly name for your weather radio.
-<broker> | Name of the broker as configured in `openhab.cfg`.
+`<serial_number>` | Serial number of your Raspberry Pi. The serial number is used to distinguish multiple weather radios if you had them. The serial number can be found at the bottom of `/proc/cpuinfo`.
+`<name>` | Friendly name for your weather radio.
+`<broker>` | Name of the broker as configured in `openhab.cfg`.
 
 Once you've edited the items and sitemap files copy these files to
 the appropriate location in your openHAB installation:
