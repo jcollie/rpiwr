@@ -3,6 +3,23 @@
 This project is about developing a NOAA Weather Radio that connects
 into your smart home, in particular to [openHAB](http://www.openhab.org/).
 
+The ultimate goal of this project is to relay alerts broadcast by the
+National Weather Service to your home automation system. The alerts
+could then trigger other actions like turning on lights or turning on
+a TV and tuning it to the local weather forecast.
+
+One caveat with this system is that the receiver chip, the
+[SI4707](http://www.silabs.com/products/audio/fm-am-receiver/pages/si4707.aspx)
+made by Silicon Labs, used on the add-on board does not provide the
+audio part of the broadcast in a digital format. The audio is provided
+by the system in an analog format and can be routed to either a small
+speaker built into the add-on board or to a 3.5mm audio jack for
+feeding to external speakers.
+
+In theory the analog audio could be run through an ADC and then
+streamed to the network as digital audio but that's a topic for future
+research.
+
 ## Safety notes and disclaimer
 
 Having a weather radio is an important safety tool for you and your
