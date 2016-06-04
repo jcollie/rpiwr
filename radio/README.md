@@ -89,8 +89,8 @@ Install some I2C utilities that will be used for some testing:
 apt-get install i2c-tools
 ```
 
-Reboot your Raspberry Pi. Once you're logged back running `i2cdetect
--y 1` should return this:
+Reboot your Raspberry Pi. Once you're logged back in running
+`i2cdetect -y 1` should return this:
 
 
 ```
@@ -107,10 +107,12 @@ Reboot your Raspberry Pi. Once you're logged back running `i2cdetect
 
 ## Python 3 virtualenv
 
-The server I've written uses Python 3, plus a few pre-packaged modules so make sure that they are installed. We'll also need `git` to check out 
+The server I've written uses Python 3, plus a few pre-packaged modules
+so make sure that they are installed. We'll also need `git` to check
+out the code.
 
 ```sh
-apt-get install python3-dev python3-smbus python3-virtualenv git
+apt-get install python3-dev python3-virtualenv git
 ```
 
 ```sh
@@ -144,3 +146,32 @@ packages need to be installed).
 
 ## systemd service
 
+Copy the systemd service file to it's proper location:
+
+```sh
+cp /opt/rpiwr/radio/rpiwr.service /etc/systemd/system
+```
+
+Refresh systemd:
+
+```sh
+systemctl daemon-reload
+```
+
+## Edit the config
+
+Edit `/opt/rpiwr/etc/config.json`. The only configuration at the
+moment is the location of your MQTT broker.
+
+## Start the service
+
+```sh
+systemctl start rpiwr
+```
+
+The service can be monitored with the following commands:
+
+```sh
+systemctl status rpiwr
+journalctl -a -f -u rpiwr
+```
