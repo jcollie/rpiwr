@@ -211,31 +211,6 @@ class SI4707(object):
     GPO2LEVEL =                     0x04      #  Sets GPO2 High.
     GPO3LEVEL =                     0x08      #  Sets GPO3 High.
 
-    #  SAME confidence level masks and bit shift positions.
-    SAME_STATUS_OUT_CONF0_BYTE =       5
-    SAME_STATUS_OUT_CONF1_BYTE =       5
-    SAME_STATUS_OUT_CONF2_BYTE =       5
-    SAME_STATUS_OUT_CONF3_BYTE =       5
-    SAME_STATUS_OUT_CONF4_BYTE =       5
-    SAME_STATUS_OUT_CONF5_BYTE =       4
-    SAME_STATUS_OUT_CONF6_BYTE =       4
-    SAME_STATUS_OUT_CONF7_BYTE =       4
-    SAME_STATUS_OUT_CONF0_MASK =       4
-    SAME_STATUS_OUT_CONF1_MASK =       0x0C
-    SAME_STATUS_OUT_CONF2_MASK =       0x30
-    SAME_STATUS_OUT_CONF3_MASK =       0xC0
-    SAME_STATUS_OUT_CONF4_MASK =       0x03
-    SAME_STATUS_OUT_CONF5_MASK =       0x0C
-    SAME_STATUS_OUT_CONF6_MASK =       0x30
-    SAME_STATUS_OUT_CONF7_MASK =       0xC0
-    SAME_STATUS_OUT_CONF0_SHFT =       0
-    SAME_STATUS_OUT_CONF1_SHFT =       2
-    SAME_STATUS_OUT_CONF2_SHFT =       4
-    SAME_STATUS_OUT_CONF3_SHFT =       6
-    SAME_STATUS_OUT_CONF4_SHFT =       0
-    SAME_STATUS_OUT_CONF5_SHFT =       2
-    SAME_STATUS_OUT_CONF6_SHFT =       4
-    SAME_STATUS_OUT_CONF7_SHFT =       6
 
     #  Radio Variables.
     freqHighByte = 0xFD
@@ -398,7 +373,7 @@ class SI4707(object):
         self._device.write16(self.WB_ASQ_STATUS, mode)
         time.sleep(self.CMD_DELAY)
         result = self._device.readList(0, 3)
-        return result[1]
+        return (result[1], result[2])
 
     def setVolume(self, volume):
         if volume > 0x003F:
@@ -469,48 +444,34 @@ class SI4707(object):
         return result[2] << 8 | result[3]
 
     @locking
-    def getSameStatus(self, mode = CHECK):
-        self._device.writeList(self.WB_SAME_STATUS, [mode, 0x00])
+    def getSameStatus(self):
+        self._device.writeList(self.WB_SAME_STATUS, [self.CHECK, 0x00])
+        time.sleep(self.CMD_DELAY)
         result = self._device.readList(0, 14)
 
-        sameStatus = result[1]
-        sameState = result[2]
-        sameLength = result[3]
+        msg = SAMEMessage(result[1], result[2], result[3])
 
-        if not(sameStatus & self.HDRRDY):
+        if not(msg.status & self.HDRRDY):
             reactor.callInThread(self.log.debug, 'No SAME header ready!')
-            return (sameStatus, sameState, sameLength, [], b'', '')
+            return msg
 
-        if sameLength < self.SAME_MIN_LENGTH:
+        if msg.length < self.SAME_MIN_LENGTH:
             reactor.callInThread(self.log.debug, 'SAME message too short')
-            return (sameStatus, sameState, sameLength, [], b'', '')
+            return msg
 
-        confidence = []
-        data = []
+        msg.addData(result)
         
-        for i in range(0, sameLength, 8):
+        for i in range(8, msg.length, 8):
             self._device.writeList(self.WB_SAME_STATUS, [self.CHECK, i])
+            time.sleep(self.CMD_DELAY)
             result = self._device.readList(0, 14)
 
-            confidence.append((result[self.SAME_STATUS_OUT_CONF0_BYTE] & self.SAME_STATUS_OUT_CONF0_MASK) >> self.SAME_STATUS_OUT_CONF0_SHFT)
-            confidence.append((result[self.SAME_STATUS_OUT_CONF1_BYTE] & self.SAME_STATUS_OUT_CONF1_MASK) >> self.SAME_STATUS_OUT_CONF1_SHFT)
-            confidence.append((result[self.SAME_STATUS_OUT_CONF2_BYTE] & self.SAME_STATUS_OUT_CONF2_MASK) >> self.SAME_STATUS_OUT_CONF2_SHFT)
-            confidence.append((result[self.SAME_STATUS_OUT_CONF3_BYTE] & self.SAME_STATUS_OUT_CONF3_MASK) >> self.SAME_STATUS_OUT_CONF3_SHFT)
-            confidence.append((result[self.SAME_STATUS_OUT_CONF4_BYTE] & self.SAME_STATUS_OUT_CONF4_MASK) >> self.SAME_STATUS_OUT_CONF4_SHFT)
-            confidence.append((result[self.SAME_STATUS_OUT_CONF5_BYTE] & self.SAME_STATUS_OUT_CONF5_MASK) >> self.SAME_STATUS_OUT_CONF5_SHFT)
-            confidence.append((result[self.SAME_STATUS_OUT_CONF6_BYTE] & self.SAME_STATUS_OUT_CONF6_MASK) >> self.SAME_STATUS_OUT_CONF6_SHFT)
-            confidence.append((result[self.SAME_STATUS_OUT_CONF7_BYTE] & self.SAME_STATUS_OUT_CONF7_MASK) >> self.SAME_STATUS_OUT_CONF7_SHFT)
+            msg.addData(result)
 
-            data.append(result[6])
-            data.append(result[7])
-            data.append(result[8])
-            data.append(result[9])
-            data.append(result[10])
-            data.append(result[11])
-            data.append(result[12])
-            data.append(result[13])
-
-        return (sameStatus, sameState, sameLength, confidence, bytes(data).decode('ascii', 'replace'), data)
+        self._device.writeList(self.WB_SAME_STATUS, [self.CLRBUF | self.INTACK, 0x00])
+        time.sleep(self.CMD_DELAY)
+        
+        return msg
 
     @locking
     def sameFlush(self):
@@ -526,3 +487,58 @@ class SI4707(object):
     def tune(self, lowByte):
         self._device.writeList(self.WB_TUNE_FREQ, [0x00, self.freqHighByte, lowByte])
         time.sleep(self.TUNE_DELAY)
+
+class SAMEMessage(object):
+    #  SAME confidence level masks and bit shift positions.
+    SAME_STATUS_OUT_CONF0_BYTE =       5
+    SAME_STATUS_OUT_CONF1_BYTE =       5
+    SAME_STATUS_OUT_CONF2_BYTE =       5
+    SAME_STATUS_OUT_CONF3_BYTE =       5
+    SAME_STATUS_OUT_CONF4_BYTE =       5
+    SAME_STATUS_OUT_CONF5_BYTE =       4
+    SAME_STATUS_OUT_CONF6_BYTE =       4
+    SAME_STATUS_OUT_CONF7_BYTE =       4
+    SAME_STATUS_OUT_CONF0_MASK =       4
+    SAME_STATUS_OUT_CONF1_MASK =       0x0C
+    SAME_STATUS_OUT_CONF2_MASK =       0x30
+    SAME_STATUS_OUT_CONF3_MASK =       0xC0
+    SAME_STATUS_OUT_CONF4_MASK =       0x03
+    SAME_STATUS_OUT_CONF5_MASK =       0x0C
+    SAME_STATUS_OUT_CONF6_MASK =       0x30
+    SAME_STATUS_OUT_CONF7_MASK =       0xC0
+    SAME_STATUS_OUT_CONF0_SHFT =       0
+    SAME_STATUS_OUT_CONF1_SHFT =       2
+    SAME_STATUS_OUT_CONF2_SHFT =       4
+    SAME_STATUS_OUT_CONF3_SHFT =       6
+    SAME_STATUS_OUT_CONF4_SHFT =       0
+    SAME_STATUS_OUT_CONF5_SHFT =       2
+    SAME_STATUS_OUT_CONF6_SHFT =       4
+    SAME_STATUS_OUT_CONF7_SHFT =       6
+
+    def __init__(self, sameStatus, sameState, sameLength):
+        self.status = sameStatus
+        self.state = sameState
+        self.length = sameLength
+
+        self.confidence = []
+        self.data = []
+
+    def addData(self, result):
+        self.confidence.append((result[self.SAME_STATUS_OUT_CONF0_BYTE] & self.SAME_STATUS_OUT_CONF0_MASK) >> self.SAME_STATUS_OUT_CONF0_SHFT)
+        self.confidence.append((result[self.SAME_STATUS_OUT_CONF1_BYTE] & self.SAME_STATUS_OUT_CONF1_MASK) >> self.SAME_STATUS_OUT_CONF1_SHFT)
+        self.confidence.append((result[self.SAME_STATUS_OUT_CONF2_BYTE] & self.SAME_STATUS_OUT_CONF2_MASK) >> self.SAME_STATUS_OUT_CONF2_SHFT)
+        self.confidence.append((result[self.SAME_STATUS_OUT_CONF3_BYTE] & self.SAME_STATUS_OUT_CONF3_MASK) >> self.SAME_STATUS_OUT_CONF3_SHFT)
+        self.confidence.append((result[self.SAME_STATUS_OUT_CONF4_BYTE] & self.SAME_STATUS_OUT_CONF4_MASK) >> self.SAME_STATUS_OUT_CONF4_SHFT)
+        self.confidence.append((result[self.SAME_STATUS_OUT_CONF5_BYTE] & self.SAME_STATUS_OUT_CONF5_MASK) >> self.SAME_STATUS_OUT_CONF5_SHFT)
+        self.confidence.append((result[self.SAME_STATUS_OUT_CONF6_BYTE] & self.SAME_STATUS_OUT_CONF6_MASK) >> self.SAME_STATUS_OUT_CONF6_SHFT)
+        self.confidence.append((result[self.SAME_STATUS_OUT_CONF7_BYTE] & self.SAME_STATUS_OUT_CONF7_MASK) >> self.SAME_STATUS_OUT_CONF7_SHFT)
+
+        self.data.append(result[6])
+        self.data.append(result[7])
+        self.data.append(result[8])
+        self.data.append(result[9])
+        self.data.append(result[10])
+        self.data.append(result[11])
+        self.data.append(result[12])
+        self.data.append(result[13])
+        

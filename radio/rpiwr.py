@@ -107,7 +107,7 @@ class Radio(object):
 
     def radioSetup4(self, ignored):
         d = self.radio.setProperty(self.radio.WB_ASQ_INT_SOURCE,
-                              (self.radio.ALERTONIEN))
+                                   (self.radio.ALERTONIEN))
         d.addCallback(self.radioSetup5)
         
     def radioSetup5(self, ignored):
@@ -177,7 +177,7 @@ class Radio(object):
 
         if status & self.radio.SAMEINT:
             self.log.debug('SAME interrupt')
-            d = self.radio.getSameStatus(self.radio.INTACK)
+            d = self.radio.getSameStatus()
             d.addCallback(self.logSAMEStatus)
 
         if status & self.radio.ASQINT:
@@ -223,12 +223,12 @@ class Radio(object):
     def logASQStatus(self, result):
         self.log.debug('ASQ status: {status:}', status = result)
 
-        if result == 0x01:
-            self.radio.sameFlush()
-            self.log.debug('1050 Hz Alert Tone: ON')
-
-        elif result == 0x02:
-            self.log.debug('1050 Hz Alert Tone: OFF')
+        #if result == 0x01:
+        #    self.radio.sameFlush()
+        #    self.log.debug('1050 Hz Alert Tone: ON')
+        #
+        #elif result == 0x02:
+        #    self.log.debug('1050 Hz Alert Tone: OFF')
 
     def logMuteStatus(self, result):
         self.log.debug('Mute status: {status:}', status = result)
