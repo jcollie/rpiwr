@@ -204,19 +204,19 @@ class Radio(object):
             self.mqtt.publish(topic = 'weather_radio/{}/frequency_offset'.format(self.serial), qos = 0, message = '{}'.format(result['frequency_offset']))
             
     def logSAMEStatus(self, result):
-        self.log.debug('SAME status: {status:}', status = result)
-        sameStatus, sameState, sameLength, confidence, data = result
+        self.log.debug('SAME status: {status:} {state:} {length:} {confidence:} {data:}', status = result.status, state = result.state, length = result.length, confidence = result.confidence, data = result.data)
+        #sameStatus, sameState, sameLength, confidence, data = result
 
-        if sameStatus & self.radio.HDRRDY:
+        if result.status & self.radio.HDRRDY:
             self.log.debug('SAME header detected')
 
-        if sameStatus & self.radio.PREDET:
+        if result.status & self.radio.PREDET:
             self.log.debug('SAME preamble detected')
             
-        if sameStatus & self.radio.SOMDET:
+        if result.status & self.radio.SOMDET:
             self.log.debug('SAME start of message detected')
 
-        if sameStatus & self.radio.EOMDET:
+        if result.status & self.radio.EOMDET:
             self.log.debug('SAME end of message detected')
             self.radio.sameFlush()
             
