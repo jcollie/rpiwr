@@ -42,7 +42,7 @@ def locking(fn):
             d = deferToThread(fn, self, *args, **kw)
             d.addCallback(_handleReturn, response)
             d.addErrback(_handleError, response)
-            
+
         def _handleReturn(result, response):
             self._lock.release()
             response.callback(result)
@@ -51,17 +51,17 @@ def locking(fn):
             self.log.error('Error: {failure:}', failure = failure)
             self._lock.release()
             response.errback(failure)
-            
+
         response = Deferred()
         d = self._lock.acquire()
         d.addCallback(_runInThread, response)
         return response
-    
+
     return _wrap
 
 class SI4707(object):
     log = Logger()
-    
+
     ON =                                    0x01      #  Used for Power/Mute On.
     OFF =                                   0x00      #  Used for Power/Mute Off.
     CMD_DELAY =                            0.002      #  Inter-Command delay (>301 usec).
@@ -152,7 +152,7 @@ class SI4707(object):
     CTSINT =                        0x80      #  Clear To Send Interrupt.
 
     # Si4707 status register masks.
-    
+
     VALID =                         0x01      #  Valid Channel.
     AFCRL =                         0x02      #  AFC Rail Indicator.
 
@@ -203,7 +203,7 @@ class SI4707(object):
     ALERTOFIEN =                    0x0002      #  Sets 1050 Hz tone off as source of ASQ Interrupt.
 
     #  Si4707 GPO control / set functions.
-    
+
     GPO1OEN =                       0x02      #  GPO1 output enable.
     GPO2OEN =                       0x04      #  GPO2 output enable.  The use of GPO2 as an interrupt pin will override this.
     GPO3OEN =                       0x08      #  GPO3 output enable.
@@ -260,7 +260,7 @@ class SI4707(object):
         self._lock = DeferredLock()
         self._device = Device(0x11, 1)
         self.power = self.OFF
-        
+
     @locking
     def on(self):
         if self.power == self.ON:
@@ -281,7 +281,7 @@ class SI4707(object):
         time.sleep(self.PUP_DELAY)
 
         reactor.callFromThread(self.log.debug, 'Starting patch')
-        
+
         for command, data in self.PATCH_COMMANDS:
             self._device.writeList(command, data)
             time.sleep(0.02)
@@ -290,7 +290,7 @@ class SI4707(object):
         reactor.callFromThread(self.log.debug, 'Patch finished')
         self.power = self.ON
         time.sleep(2.0)
-        
+
     @locking
     def off(self):
         if self.power == self.OFF:
@@ -315,12 +315,12 @@ class SI4707(object):
         self._device.write8(self.WB_TUNE_STATUS, mode)
         time.sleep(self.CMD_DELAY)
         result = self._device.readList(0, 6)
-        
+
         channel = result[2] << 8 | result[3]
         frequency = channel * 2500
         rssi = result[4] - 107
         snr = result[5]
-        
+
         return {'channel': channel,
                 'frequency': frequency,
                 'rssi': rssi,
@@ -331,7 +331,7 @@ class SI4707(object):
         self._device.write8(self.WB_RSQ_STATUS, mode)
         time.sleep(self.CMD_DELAY)
         result = self._device.readList(0, 8)
-        
+
         rsq_status = result[1]
         rssi = result[4] - 107
         snr = result[5]
@@ -339,7 +339,7 @@ class SI4707(object):
         if frequency_offset >= 128:
             frequency_offset = frequency_offset - 256
         frequency_offset = frequency_offset >> 1
-        
+
         return {'rsq_status': rsq_status,
                 'rssi': rssi,
                 'rssi_units': 'dBm',
@@ -393,7 +393,7 @@ class SI4707(object):
 
     def _volumeIncrease(self, result):
         self.setVolume(result + 1)
-        
+
     def volumeDecrease(self):
         d = self.getVolume()
         d.addCallback(self._volumeDecrease)
@@ -421,7 +421,7 @@ class SI4707(object):
             response.callback(False)
         else:
             response.callback(None)
-    
+
     @locking
     def setProperty(self, prop, value):
         pHi, pLo = divmod(prop, 0x100)
@@ -445,9 +445,10 @@ class SI4707(object):
 
     @locking
     def getSameStatus(self):
-        self._device.writeList(self.WB_SAME_STATUS, [self.CHECK, 0x00])
-        time.sleep(self.CMD_DELAY)
+        self._device.writeList(self.WB_SAME_STATUS, [self.INTACK, 0x00])
+        #time.sleep(self.CMD_DELAY)
         result = self._device.readList(0, 14)
+        reactor.callInThread(self.log.debug, 'Same Status: {result:}', result = result)
 
         msg = SAMEMessage(result[1], result[2], result[3])
 
@@ -460,24 +461,26 @@ class SI4707(object):
             return msg
 
         msg.addData(result)
-        
+
         for i in range(8, msg.length, 8):
             self._device.writeList(self.WB_SAME_STATUS, [self.CHECK, i])
-            time.sleep(self.CMD_DELAY)
+            #time.sleep(self.CMD_DELAY)
             result = self._device.readList(0, 14)
+            reactor.callInThread(self.log.debug, 'Same Status: {result:}', result = result)
 
             msg.addData(result)
 
-        self._device.writeList(self.WB_SAME_STATUS, [self.CLRBUF | self.INTACK, 0x00])
-        time.sleep(self.CMD_DELAY)
-        
+        self._device.writeList(self.WB_SAME_STATUS, [self.CLRBUF, 0x00])
+        #time.sleep(self.CMD_DELAY)
+
         return msg
 
     @locking
     def sameFlush(self):
         reactor.callInThread(self.log.debug, 'SAME flush!')
         self._device.writeList(self.WB_SAME_STATUS, [self.CLRBUF | self.INTACK, 0x00])
-        
+        #time.sleep(self.CMD_DELAY)
+
     #def tuneDirect(self, direct):
     #    if (direct < 162400) or (direct > 162550):
     #        return
@@ -494,18 +497,10 @@ class SAMEMessage(object):
     SAME_STATUS_OUT_CONF1_BYTE =       5
     SAME_STATUS_OUT_CONF2_BYTE =       5
     SAME_STATUS_OUT_CONF3_BYTE =       5
-    SAME_STATUS_OUT_CONF4_BYTE =       5
+    SAME_STATUS_OUT_CONF4_BYTE =       4
     SAME_STATUS_OUT_CONF5_BYTE =       4
     SAME_STATUS_OUT_CONF6_BYTE =       4
     SAME_STATUS_OUT_CONF7_BYTE =       4
-    SAME_STATUS_OUT_CONF0_MASK =       4
-    SAME_STATUS_OUT_CONF1_MASK =       0x0C
-    SAME_STATUS_OUT_CONF2_MASK =       0x30
-    SAME_STATUS_OUT_CONF3_MASK =       0xC0
-    SAME_STATUS_OUT_CONF4_MASK =       0x03
-    SAME_STATUS_OUT_CONF5_MASK =       0x0C
-    SAME_STATUS_OUT_CONF6_MASK =       0x30
-    SAME_STATUS_OUT_CONF7_MASK =       0xC0
     SAME_STATUS_OUT_CONF0_SHFT =       0
     SAME_STATUS_OUT_CONF1_SHFT =       2
     SAME_STATUS_OUT_CONF2_SHFT =       4
@@ -524,14 +519,14 @@ class SAMEMessage(object):
         self.data = []
 
     def addData(self, result):
-        self.confidence.append((result[self.SAME_STATUS_OUT_CONF0_BYTE] & self.SAME_STATUS_OUT_CONF0_MASK) >> self.SAME_STATUS_OUT_CONF0_SHFT)
-        self.confidence.append((result[self.SAME_STATUS_OUT_CONF1_BYTE] & self.SAME_STATUS_OUT_CONF1_MASK) >> self.SAME_STATUS_OUT_CONF1_SHFT)
-        self.confidence.append((result[self.SAME_STATUS_OUT_CONF2_BYTE] & self.SAME_STATUS_OUT_CONF2_MASK) >> self.SAME_STATUS_OUT_CONF2_SHFT)
-        self.confidence.append((result[self.SAME_STATUS_OUT_CONF3_BYTE] & self.SAME_STATUS_OUT_CONF3_MASK) >> self.SAME_STATUS_OUT_CONF3_SHFT)
-        self.confidence.append((result[self.SAME_STATUS_OUT_CONF4_BYTE] & self.SAME_STATUS_OUT_CONF4_MASK) >> self.SAME_STATUS_OUT_CONF4_SHFT)
-        self.confidence.append((result[self.SAME_STATUS_OUT_CONF5_BYTE] & self.SAME_STATUS_OUT_CONF5_MASK) >> self.SAME_STATUS_OUT_CONF5_SHFT)
-        self.confidence.append((result[self.SAME_STATUS_OUT_CONF6_BYTE] & self.SAME_STATUS_OUT_CONF6_MASK) >> self.SAME_STATUS_OUT_CONF6_SHFT)
-        self.confidence.append((result[self.SAME_STATUS_OUT_CONF7_BYTE] & self.SAME_STATUS_OUT_CONF7_MASK) >> self.SAME_STATUS_OUT_CONF7_SHFT)
+        self.confidence.append((result[self.SAME_STATUS_OUT_CONF0_BYTE] >> self.SAME_STATUS_OUT_CONF0_SHFT) & 0x03)
+        self.confidence.append((result[self.SAME_STATUS_OUT_CONF1_BYTE] >> self.SAME_STATUS_OUT_CONF1_SHFT) & 0x03)
+        self.confidence.append((result[self.SAME_STATUS_OUT_CONF2_BYTE] >> self.SAME_STATUS_OUT_CONF2_SHFT) & 0x03)
+        self.confidence.append((result[self.SAME_STATUS_OUT_CONF3_BYTE] >> self.SAME_STATUS_OUT_CONF3_SHFT) & 0x03)
+        self.confidence.append((result[self.SAME_STATUS_OUT_CONF4_BYTE] >> self.SAME_STATUS_OUT_CONF4_SHFT) & 0x03)
+        self.confidence.append((result[self.SAME_STATUS_OUT_CONF5_BYTE] >> self.SAME_STATUS_OUT_CONF5_SHFT) & 0x03)
+        self.confidence.append((result[self.SAME_STATUS_OUT_CONF6_BYTE] >> self.SAME_STATUS_OUT_CONF6_SHFT) & 0x03)
+        self.confidence.append((result[self.SAME_STATUS_OUT_CONF7_BYTE] >> self.SAME_STATUS_OUT_CONF7_SHFT) & 0x03)
 
         self.data.append(result[6])
         self.data.append(result[7])
@@ -541,4 +536,3 @@ class SAMEMessage(object):
         self.data.append(result[11])
         self.data.append(result[12])
         self.data.append(result[13])
-        

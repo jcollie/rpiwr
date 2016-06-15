@@ -205,7 +205,6 @@ class Radio(object):
             
     def logSAMEStatus(self, result):
         self.log.debug('SAME status: {status:} {state:} {length:} {confidence:} {data:}', status = result.status, state = result.state, length = result.length, confidence = result.confidence, data = result.data)
-        #sameStatus, sameState, sameLength, confidence, data = result
 
         if result.status & self.radio.HDRRDY:
             self.log.debug('SAME header detected')
