@@ -403,10 +403,10 @@ class SI4707(object):
 
     def setMute(self, value):
         if value:
-            self.setProperty(self.RX_HARD_MUTE, 0x0003)
+            return self.setProperty(self.RX_HARD_MUTE, 0x0003)
 
         else:
-            self.setProperty(self.RX_HARD_MUTE, 0x0000)
+            return self.setProperty(self.RX_HARD_MUTE, 0x0000)
 
     def getMute(self):
         response = Deferred()
